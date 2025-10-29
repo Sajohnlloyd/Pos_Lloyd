@@ -3,37 +3,34 @@ include_once "ui/connectdb.php";
 session_start();
 
 if (isset($_POST['btn_login'])) {
-    $userInput = $_POST['txt_user'];  // can be email or username
+    $userInput = trim($_POST['txt_user']);   // Can be email or username
     $password  = $_POST['txt_password'];
 
-  $select = $pdo->prepare("SELECT * FROM tbl_user2 WHERE usermail = :login OR username = :login");
-  $select->bindParam(':login',$login_input);
-  $select->execute();
+    // ✅ Check if user exists (match email or username)
+    $select = $pdo->prepare("SELECT * FROM tbl_user2 WHERE usermail = :login OR username = :login");
+    $select->bindParam(':login', $userInput);
+    $select->execute();
+    $row = $select->fetch(PDO::FETCH_ASSOC);
 
-  $row = $select->fetch(PDO::FETCH_ASSOC);
+    if ($row) {
+        // ✅ Verify hashed password
+        if (password_verify($password, $row['password'])) {
+            // ✅ Store session info
+            $_SESSION['username'] = $row['username'];
+            $_SESSION['usermail'] = $row['usermail'];
+            $_SESSION['status'] = 'Login successful! Redirecting...';
+            $_SESSION['status_code'] = 'success';
 
-  if($row){
-
-    if($row['password'] == $password){
-
-      $_SESSION['username'] = $row['username'];
-      $_SESSION['usermail'] = $row['usermail'];
-      $_SESSION['status'] = 'Login Success';
-      $_SESSION['status_code'] = 'success';
-      header('refresh: ui/dashboard.php');
-
+            // ✅ Redirect to dashboard after short delay
+            echo '<meta http-equiv="refresh" content="2;url=ui/dashboard.php">';
+        } else {
+            $_SESSION['status'] = 'Incorrect password!';
+            $_SESSION['status_code'] = 'error';
+        }
     } else {
-      $_SESSION['status'] = 'Wrong Email or Username';
-      $_SESSION['status_code'] = 'error';
-
+        $_SESSION['status'] = 'Email or Username not found!';
+        $_SESSION['status_code'] = 'error';
     }
-
-
-  }
-
-
-
-  
 }
 ?>
 <!DOCTYPE html>
@@ -56,6 +53,7 @@ if (isset($_POST['btn_login'])) {
   <!-- Theme style -->
   <link rel="stylesheet" href="dist/css/adminlte.min.css">
 </head>
+
 <body class="hold-transition login-page">
 <div class="login-box">
   <div class="card card-outline card-primary">
@@ -79,44 +77,39 @@ if (isset($_POST['btn_login'])) {
           </div>
         </div>
         <div class="row">
-          <div class="col-8"><div class="icheck-primary"><a href="forgot-password.html">I forgot my password</a></div></div>
-          <div class="col-8"><div class="icheck-promary"><a href="ui/signup.php">I dont have account</a></div></div>
-          <div class="col-4"><button type="submit" class="btn btn-primary btn-block" name="btn_login">Login</button></div>
+          <div class="col-8">
+            <a href="forgot-password.html">I forgot my password</a><br>
+            <a href="ui/signup.php">I don't have an account</a>
+          </div>
+          <div class="col-4">
+            <button type="submit" class="btn btn-primary btn-block" name="btn_login">Login</button>
+          </div>
         </div>
       </form>
     </div>
   </div>
 </div>
-        
-
 
 <!-- Scripts -->
 <script src="plugins/jquery/jquery.min.js"></script>
 <script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<!-- SweetAlert2 -->
 <script src="plugins/sweetalert2/sweetalert2.min.js"></script>
-<!-- Toastr -->
 <script src="plugins/toastr/toastr.min.js"></script>
-<!-- AdminLTE App -->
 <script src="dist/js/adminlte.min.js"></script>
 
 <?php
-// show toast once if session status set
+// ✅ SweetAlert feedback
 if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
-    // echo small toast using SweetAlert2
     ?>
     <script>
       $(function() {
-        var Toast = Swal.mixin({
+        Swal.fire({
           toast: true,
           position: 'top',
-          showConfirmButton: false,
-          timer: 5000
-        });
-
-        Toast.fire({
           icon: '<?php echo $_SESSION['status_code']; ?>',
-          title: '<?php echo $_SESSION['status']; ?>'
+          title: '<?php echo $_SESSION['status']; ?>',
+          showConfirmButton: false,
+          timer: 4000
         });
       });
     </script>
@@ -127,7 +120,3 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 ?>
 </body>
 </html>
-
-
-
-can you fix this and can go to ui/dashboard.php
