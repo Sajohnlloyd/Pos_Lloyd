@@ -1,22 +1,22 @@
-  <?php
+<?php
 include_once "connectdb.php";
 session_start();
 
 if (isset($_POST['btn_register'])) {
-    $name     = trim($_POST['txt_name']);      
-    $username = trim($_POST['txt_username']); 
-    $contactnumber = trim($_POST['txt_contactnumber']);
-    $address = trim($_POST['txt_address']);
-    $usermail = trim($_POST['txt_mail']);      
-    $password = $_POST['txt_password'];  
-    $confirm_password = $_POST['txt_confirm_password'];
+    $name           = trim($_POST['txt_name']);
+    $username       = trim($_POST['txt_username']);
+    $contactnumber  = trim($_POST['txt_contactnumber']);
+    $address        = trim($_POST['txt_address']);
+    $usermail       = trim($_POST['txt_mail']);
+    $password       = $_POST['txt_password'];
+    $confirm_pass   = $_POST['txt_confirm_password'];
 
-    //  Check if passwords match
-    if ($password !== $confirm_password) {
+    // ✅ Check if passwords match
+    if ($password !== $confirm_pass) {
         $_SESSION['status'] = "Passwords do not match!";
         $_SESSION['status_code'] = "error";
     } else {
-        // Check if email already exists
+        // ✅ Check if email already exists
         $check = $pdo->prepare("SELECT * FROM tbl_user2 WHERE usermail = :usermail");
         $check->execute([':usermail' => $usermail]);
         $existing = $check->fetch(PDO::FETCH_ASSOC);
@@ -25,25 +25,27 @@ if (isset($_POST['btn_register'])) {
             $_SESSION['status'] = "Email already registered!";
             $_SESSION['status_code'] = "error";
         } else {
-            // Hash password before saving
+            // ✅ Hash password before saving
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            //  Insert new user using your new column names
-            $insert = $pdo->prepare("INSERT INTO tbl_user2 (name, contactnumber, address, username, usermail, password)
-                                     VALUES (:name, :contactnumber, :address, :username, :usermail, :password)");
+            // ✅ Insert new user
+            $insert = $pdo->prepare("INSERT INTO tbl_user2 
+                (name, contactnumber, address, username, usermail, password) 
+                VALUES (:name, :contactnumber, :address, :username, :usermail, :password)"
+            );
+
             $insert->execute([
-                ':name'      => $name,
+                ':name'          => $name,
                 ':contactnumber' => $contactnumber,
-                ':address' => $address,
-                ':username'  => $username,
-                ':usermail'  => $usermail,
-                ':password'  => $hashed_password
+                ':address'       => $address,
+                ':username'      => $username,
+                ':usermail'      => $usermail,
+                ':password'      => $hashed_password
             ]);
 
             $_SESSION['status'] = "Registration successful! Redirecting to login...";
             $_SESSION['status_code'] = "success";
 
-            //  Redirect after short delay
             echo '<meta http-equiv="refresh" content="2;url=../index.php">';
         }
     }
@@ -54,7 +56,7 @@ if (isset($_POST['btn_register'])) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>POS BARCODE_SYSTEM_Sign Up</title>
+  <title>POS System | Sign Up</title>
 
   <!-- CSS dependencies -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -69,39 +71,37 @@ if (isset($_POST['btn_register'])) {
 <div class="register-box">
   <div class="card card-outline card-primary">
     <div class="card-header text-center">
-      <a href="#" class="h1"><b>Sign</b>_Up</a>
+      <a href="#" class="h1"><b>POS</b>_SignUp</a>
     </div>
     <div class="card-body">
       <p class="login-box-msg">Register a new account</p>
 
       <form action="" method="post">
         <div class="input-group mb-3">
-          <input type="text" class="form-control" placeholder="Name" name="txt_name" required>
+          <input type="text" class="form-control" placeholder="Full Name" name="txt_name" required>
           <div class="input-group-append">
             <div class="input-group-text"><span class="fas fa-user"></span></div>
           </div>
         </div>
 
-        <form action="" method="post">
         <div class="input-group mb-3">
-          <input type="text" class="form-control" placeholder="Contact umber" name="txt_contactnumber" required>
+          <input type="text" class="form-control" placeholder="Contact Number" name="txt_contactnumber" required>
           <div class="input-group-append">
             <div class="input-group-text"><span class="fas fa-phone"></span></div>
           </div>
         </div>
 
-        <form action="" method="post">
         <div class="input-group mb-3">
-          <input type="text" class="form-control" placeholder="Address" name="txt_Address" required>
+          <input type="text" class="form-control" placeholder="Address" name="txt_address" required>
           <div class="input-group-append">
-            <div class="input-group-text"><span class="fas fa-address-book"></span></div>
+            <div class="input-group-text"><span class="fas fa-home"></span></div>
           </div>
         </div>
 
         <div class="input-group mb-3">
           <input type="text" class="form-control" placeholder="Username" name="txt_username" required>
           <div class="input-group-append">
-            <div class="input-group-text"><span class="fas fa-user"></span></div>
+            <div class="input-group-text"><span class="fas fa-user-tag"></span></div>
           </div>
         </div>
 
@@ -149,22 +149,22 @@ if (isset($_POST['btn_register'])) {
 <?php
 // ✅ SweetAlert feedback
 if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
-    ?>
-    <script>
-      $(function() {
-        Swal.fire({
-          toast: true,
-          position: 'top',
-          icon: '<?php echo $_SESSION['status_code']; ?>',
-          title: '<?php echo $_SESSION['status']; ?>',
-          showConfirmButton: false,
-          timer: 4000
-        });
-      });
-    </script>
-    <?php
-    unset($_SESSION['status']);
-    unset($_SESSION['status_code']);
+?>
+<script>
+$(function() {
+  Swal.fire({
+    toast: true,
+    position: 'top',
+    icon: '<?php echo $_SESSION['status_code']; ?>',
+    title: '<?php echo $_SESSION['status']; ?>',
+    showConfirmButton: false,
+    timer: 4000
+  });
+});
+</script>
+<?php
+unset($_SESSION['status']);
+unset($_SESSION['status_code']);
 }
 ?>
 </body>
