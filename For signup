@@ -1,10 +1,10 @@
-<?php 
+<?php
 include_once "connectdb.php";
 session_start();
 
 if (isset($_POST['btn_register'])) {
-    $name     = trim($_POST['txt_name']);     
-    $username = trim($_POST['txt_username']); 
+    $name     = trim($_POST['txt_name']);      
+    $username = trim($_POST['txt_username']);  
     $usermail = trim($_POST['txt_mail']);      
     $password = $_POST['txt_password'];  
     $confirm_password = $_POST['txt_confirm_password'];
@@ -26,8 +26,8 @@ if (isset($_POST['btn_register'])) {
             // ✅ Hash password before saving
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            // ✅ Insert new user
-            $insert = $pdo->prepare("INSERT INTO tbl_user (name, username, usermail, userpassword)
+            // ✅ Insert new user using your new column names
+            $insert = $pdo->prepare("INSERT INTO tbl_user (name, username, usermail, password)
                                      VALUES (:name, :username, :usermail, :password)");
             $insert->execute([
                 ':name'      => $name,
@@ -39,7 +39,7 @@ if (isset($_POST['btn_register'])) {
             $_SESSION['status'] = "Registration successful! Redirecting to login...";
             $_SESSION['status_code'] = "success";
 
-            // ✅ Redirect with a short delay to allow SweetAlert to show
+            // ✅ Redirect after short delay
             echo '<meta http-equiv="refresh" content="2;url=../index.php">';
         }
     }
@@ -107,7 +107,7 @@ if (isset($_POST['btn_register'])) {
         </div>
 
         <div class="row">
-        <div class="col-8">
+          <div class="col-8">
             <a href="../index.php" class="text-center">Already have an account?</a>
           </div>
           <div class="col-4">
@@ -127,34 +127,5 @@ if (isset($_POST['btn_register'])) {
 <script src="../dist/js/adminlte.min.js"></script>
 
 <?php
-// SweetAlert feedback
-if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
-    ?>
-    <script>
-      $(function() {
-        Swal.fire({
-          toast: true,
-          position: 'top',
-          icon: '<?php echo $_SESSION['status_code']; ?>',
-          title: '<?php echo $_SESSION['status']; ?>',
-          showConfirmButton: false,
-          timer: 4000
-        });
-      });
-    </script>
-    <?php
-    unset($_SESSION['status']);
-    unset($_SESSION['status_code']);
-}
-?>
-</body>
-</html>
-
-
-fix this my new data base is 
-1name
-2username
-3usermail
-3password
-
-
+// ✅ SweetAlert feedback
+if (isset(
