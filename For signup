@@ -1,4 +1,4 @@
-<?php
+  <?php
 include_once "connectdb.php";
 session_start();
 
@@ -128,4 +128,24 @@ if (isset($_POST['btn_register'])) {
 
 <?php
 // ✅ SweetAlert feedback
-if (isset(
+if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
+    ?>
+    <script>
+      $(function() {
+        Swal.fire({
+          toast: true,
+          position: 'top',
+          icon: '<?php echo $_SESSION['status_code']; ?>',
+          title: '<?php echo $_SESSION['status']; ?>',
+          showConfirmButton: false,
+          timer: 4000
+        });
+      });
+    </script>
+    <?php
+    unset($_SESSION['status']);
+    unset($_SESSION['status_code']);
+}
+?>
+</body>
+</html>
