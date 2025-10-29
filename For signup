@@ -1,0 +1,31 @@
+if (isset($_POST['btn_register'])) {
+    $name     = $_POST['txt_name'];       // Full name
+    $username = $_POST['txt_username'];   // Username
+    $usermail = $_POST['txt_mail'];       // Email
+    $password = $_POST['txt_password'];   // Password
+
+    // ✅ Check if email already exists
+    $check = $pdo->prepare("SELECT * FROM tbl_user WHERE usermail = :usermail");
+    $check->execute([':usermail' => $usermail]);
+    $existing = $check->fetch(PDO::FETCH_ASSOC);
+
+    if ($existing) {
+        $_SESSION['status'] = "Email already registered!";
+        $_SESSION['status_code'] = "error";
+    } else {
+        // ✅ Insert new user with name + username
+        $insert = $pdo->prepare("INSERT INTO tbl_user (name, username, usermail, userpassword)
+                                 VALUES (:name, :username, :usermail, :password)");
+        $insert->execute([
+            ':name'      => $name,
+            ':username'  => $username,
+            ':usermail'  => $usermail,
+            ':password'  => $password
+        ]);
+
+        $_SESSION['status'] = "Registration successful!";
+        $_SESSION['status_code'] = "success";
+        header("Location: index.php"); // redirect to login page
+        exit;
+    }
+}
