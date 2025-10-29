@@ -1,0 +1,171 @@
+  <?php
+include_once "connectdb.php";
+session_start();
+
+if (isset($_POST['btn_register'])) {
+    $name     = trim($_POST['txt_name']);      
+    $username = trim($_POST['txt_username']); 
+    $contactnumber = trim($_POST['txt_contactnumber']);
+    $address = trim($_POST['txt_address']);
+    $usermail = trim($_POST['txt_mail']);      
+    $password = $_POST['txt_password'];  
+    $confirm_password = $_POST['txt_confirm_password'];
+
+    //  Check if passwords match
+    if ($password !== $confirm_password) {
+        $_SESSION['status'] = "Passwords do not match!";
+        $_SESSION['status_code'] = "error";
+    } else {
+        // Check if email already exists
+        $check = $pdo->prepare("SELECT * FROM tbl_user2 WHERE usermail = :usermail");
+        $check->execute([':usermail' => $usermail]);
+        $existing = $check->fetch(PDO::FETCH_ASSOC);
+
+        if ($existing) {
+            $_SESSION['status'] = "Email already registered!";
+            $_SESSION['status_code'] = "error";
+        } else {
+            // Hash password before saving
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+            //  Insert new user using your new column names
+            $insert = $pdo->prepare("INSERT INTO tbl_user2 (name, contactnumber, address, username, usermail, password)
+                                     VALUES (:name, :contactnumber, :address, :username, :usermail, :password)");
+            $insert->execute([
+                ':name'      => $name,
+                ':contactnumber' => $contactnumber,
+                ':address' => $address,
+                ':username'  => $username,
+                ':usermail'  => $usermail,
+                ':password'  => $hashed_password
+            ]);
+
+            $_SESSION['status'] = "Registration successful! Redirecting to login...";
+            $_SESSION['status_code'] = "success";
+
+            //  Redirect after short delay
+            echo '<meta http-equiv="refresh" content="2;url=../index.php">';
+        }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>POS BARCODE_SYSTEM_Sign Up</title>
+
+  <!-- CSS dependencies -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="../plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="../plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+  <link rel="stylesheet" href="../plugins/toastr/toastr.min.css">
+  <link rel="stylesheet" href="../plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <link rel="stylesheet" href="../dist/css/adminlte.min.css">
+</head>
+
+<body class="hold-transition register-page">
+<div class="register-box">
+  <div class="card card-outline card-primary">
+    <div class="card-header text-center">
+      <a href="#" class="h1"><b>Sign</b>_Up</a>
+    </div>
+    <div class="card-body">
+      <p class="login-box-msg">Register a new account</p>
+
+      <form action="" method="post">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="Name" name="txt_name" required>
+          <div class="input-group-append">
+            <div class="input-group-text"><span class="fas fa-user"></span></div>
+          </div>
+        </div>
+
+        <form action="" method="post">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="Contact umber" name="txt_contactnumber" required>
+          <div class="input-group-append">
+            <div class="input-group-text"><span class="fas fa-phone"></span></div>
+          </div>
+        </div>
+
+        <form action="" method="post">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="Address" name="txt_Address" required>
+          <div class="input-group-append">
+            <div class="input-group-text"><span class="fas fa-address-book"></span></div>
+          </div>
+        </div>
+
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="Username" name="txt_username" required>
+          <div class="input-group-append">
+            <div class="input-group-text"><span class="fas fa-user"></span></div>
+          </div>
+        </div>
+
+        <div class="input-group mb-3">
+          <input type="email" class="form-control" placeholder="Email" name="txt_mail" required>
+          <div class="input-group-append">
+            <div class="input-group-text"><span class="fas fa-envelope"></span></div>
+          </div>
+        </div>
+
+        <div class="input-group mb-3">
+          <input type="password" class="form-control" placeholder="Password" name="txt_password" required>
+          <div class="input-group-append">
+            <div class="input-group-text"><span class="fas fa-lock"></span></div>
+          </div>
+        </div>
+
+        <div class="input-group mb-3">
+          <input type="password" class="form-control" placeholder="Confirm Password" name="txt_confirm_password" required>
+          <div class="input-group-append">
+            <div class="input-group-text"><span class="fas fa-lock"></span></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-8">
+            <a href="../index.php" class="text-center">Already have an account?</a>
+          </div>
+          <div class="col-4">
+            <button type="submit" class="btn btn-primary btn-block" name="btn_register">Sign Up</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="../plugins/jquery/jquery.min.js"></script>
+<script src="../plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../plugins/sweetalert2/sweetalert2.min.js"></script>
+<script src="../plugins/toastr/toastr.min.js"></script>
+<script src="../dist/js/adminlte.min.js"></script>
+
+<?php
+// ✅ SweetAlert feedback
+if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
+    ?>
+    <script>
+      $(function() {
+        Swal.fire({
+          toast: true,
+          position: 'top',
+          icon: '<?php echo $_SESSION['status_code']; ?>',
+          title: '<?php echo $_SESSION['status']; ?>',
+          showConfirmButton: false,
+          timer: 4000
+        });
+      });
+    </script>
+    <?php
+    unset($_SESSION['status']);
+    unset($_SESSION['status_code']);
+}
+?>
+</body>
+</html>
