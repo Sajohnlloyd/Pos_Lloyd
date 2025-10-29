@@ -3,50 +3,33 @@ include_once "ui/connectdb.php";
 session_start();
 
 if (isset($_POST['btn_login'])) {
-    $userInput = $_POST['txt_user'];  // can be email or username
+    $userInput = trim($_POST['txt_user']);   // Can be email or username
     $password  = $_POST['txt_password'];
 
-    // ✅ Check if input matches email format or treat as username
-    if (filter_var($userInput, FILTER_VALIDATE_EMAIL)) {
-        $sql = "SELECT * FROM tbl_user WHERE usermail = :userInput";
-    } else {
-        $sql = "SELECT * FROM tbl_user WHERE username = :userInput";
-    }
-
-    $select = $pdo->prepare($sql);
-    $select->execute([':userInput' => $userInput]);
+    //  Check if user exists (match email or username)
+    $select = $pdo->prepare("SELECT * FROM tbl_user2 WHERE usermail = :login OR username = :login");
+    $select->bindParam(':login', $userInput);
+    $select->execute();
     $row = $select->fetch(PDO::FETCH_ASSOC);
 
-    if ($row) {
-        // ✅ Verify hashed password
-        if (password_verify($password, $row['userpassword'])) {
-
-            // ✅ Store session data
-            $_SESSION['userid']   = $row['userid'];
+    if ($row) {   
+        //  Verify hashed password
+        if (password_verify($password, $row['password'])) {
+            //  Store session info
             $_SESSION['username'] = $row['username'];
             $_SESSION['usermail'] = $row['usermail'];
-            $_SESSION['role']     = $row['role'];
+            $_SESSION['status'] = 'Login successful! Redirecting...';
+            $_SESSION['status_code'] = 'success';
 
-            // ✅ Redirect based on role
-            if ($row['role'] === "Admin") {
-                $_SESSION['status']      = "Welcome Admin!";
-                $_SESSION['status_code'] = "success";
-                header('Location: ui/dashboard.php');
-                exit;
-            } else {
-                $_SESSION['status']      = "Welcome User!";
-                $_SESSION['status_code'] = "success";
-                header('Location: ui/user.php');
-                exit;
-            }
-
+            //  Redirect to dashboard after short delay
+            echo '<meta http-equiv="refresh" content="2;url=ui/dashboard.php">';
         } else {
-            $_SESSION['status']      = "Incorrect password!";
-            $_SESSION['status_code'] = "error";
+            $_SESSION['status'] = 'Incorrect password!';
+            $_SESSION['status_code'] = 'error';
         }
     } else {
-        $_SESSION['status']      = "No account found with that email or username!";
-        $_SESSION['status_code'] = "error";
+        $_SESSION['status'] = 'Email or Username not found!';
+        $_SESSION['status_code'] = 'error';
     }
 }
 ?>
@@ -87,17 +70,16 @@ if (isset($_POST['btn_login'])) {
             <div class="input-group-text"><span class="fas fa-user"></span></div>
           </div>
         </div>
-
         <div class="input-group mb-3">
           <input type="password" class="form-control" placeholder="Password" name="txt_password" required>
           <div class="input-group-append">
             <div class="input-group-text"><span class="fas fa-lock"></span></div>
           </div>
         </div>
-
         <div class="row">
           <div class="col-8">
-            <a href="forgot-password.html">I forgot my password</a>
+            <a href="forgot-password.html">I forgot my password</a><br>
+            <a href="ui/signup.php">I don't have an account</a>
           </div>
           <div class="col-4">
             <button type="submit" class="btn btn-primary btn-block" name="btn_login">Login</button>
@@ -116,7 +98,7 @@ if (isset($_POST['btn_login'])) {
 <script src="dist/js/adminlte.min.js"></script>
 
 <?php
-// ✅ SweetAlert feedback message
+// ✅ SweetAlert feedback
 if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
     ?>
     <script>
