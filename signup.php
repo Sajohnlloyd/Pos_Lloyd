@@ -1,40 +1,54 @@
-<?php 
-include_once "ui/connectdb.php";
+  <?php
+include_once "connectdb.php";
 session_start();
 
 if (isset($_POST['btn_register'])) {
-    $username = $_POST['txt_username'];
-    $usermail = $_POST['txt_mail'];
-    $password = $_POST['txt_password'];
-    $role     = $_POST['txt_role']; // Admin or User
+    $name     = trim($_POST['txt_name']);      
+    $username = trim($_POST['txt_username']); 
+    $contactnumber = trim($_POST['txt_contactnumber']);
+    $address = trim($_POST['txt_address']);
+    $usermail = trim($_POST['txt_mail']);      
+    $password = $_POST['txt_password'];  
+    $confirm_password = $_POST['txt_confirm_password'];
 
-    // ✅ Check if email already exists
-    $check = $pdo->prepare("SELECT * FROM tbl_user WHERE usermail = :usermail");
-    $check->execute([':usermail' => $usermail]);
-    $existing = $check->fetch(PDO::FETCH_ASSOC);
-
-    if ($existing) {
-        $_SESSION['status'] = "Email already registered!";
+    //  Check if passwords match
+    if ($password !== $confirm_password) {
+        $_SESSION['status'] = "Passwords do not match!";
         $_SESSION['status_code'] = "error";
     } else {
-        // ✅ Insert new user
-        $insert = $pdo->prepare("INSERT INTO tbl_user (username, usermail, userpassword, role)
-                                 VALUES (:username, :usermail, :password, :role)");
-        $insert->execute([
-            ':username' => $username,
-            ':usermail' => $usermail,
-            ':password' => $password,
-            ':role' => $role
-        ]);
+        // Check if email already exists
+        $check = $pdo->prepare("SELECT * FROM tbl_user2 WHERE usermail = :usermail");
+        $check->execute([':usermail' => $usermail]);
+        $existing = $check->fetch(PDO::FETCH_ASSOC);
 
-        $_SESSION['status'] = "Registration successful!";
-        $_SESSION['status_code'] = "success";
-        header("Location: index.php"); // redirect to login page
-        exit;
+        if ($existing) {
+            $_SESSION['status'] = "Email already registered!";
+            $_SESSION['status_code'] = "error";
+        } else {
+            // Hash password before saving
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+            //  Insert new user using your new column names
+            $insert = $pdo->prepare("INSERT INTO tbl_user2 (name, contactnumber, address, username, usermail, password)
+                                     VALUES (:name, :contactnumber, :address, :username, :usermail, :password)");
+            $insert->execute([
+                ':name'      => $name,
+                ':contactnumber' => $contactnumber,
+                ':address' => $address,
+                ':username'  => $username,
+                ':usermail'  => $usermail,
+                ':password'  => $hashed_password
+            ]);
+
+            $_SESSION['status'] = "Registration successful! Redirecting to login...";
+            $_SESSION['status_code'] = "success";
+
+            //  Redirect after short delay
+            echo '<meta http-equiv="refresh" content="2;url=../index.php">';
+        }
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,32 +56,50 @@ if (isset($_POST['btn_register'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>POS BARCODE_SYSTEM_Sign Up</title>
 
-  <!-- Google Font: Source Sans Pro -->
+  <!-- CSS dependencies -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css">
-  <!-- SweetAlert2 -->
-  <link rel="stylesheet" href="plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
-  <!-- Toastr -->
-  <link rel="stylesheet" href="plugins/toastr/toastr.min.css">
-  <!-- icheck bootstrap -->
-  <link rel="stylesheet" href="plugins/icheck-bootstrap/icheck-bootstrap.min.css">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="dist/css/adminlte.min.css">
+  <link rel="stylesheet" href="../plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="../plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+  <link rel="stylesheet" href="../plugins/toastr/toastr.min.css">
+  <link rel="stylesheet" href="../plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <link rel="stylesheet" href="../dist/css/adminlte.min.css">
 </head>
 
 <body class="hold-transition register-page">
 <div class="register-box">
   <div class="card card-outline card-primary">
     <div class="card-header text-center">
-      <a href="#" class="h1"><b>POS</b>_Lloyd</a>
+      <a href="#" class="h1"><b>Sign</b>_Up</a>
     </div>
     <div class="card-body">
       <p class="login-box-msg">Register a new account</p>
 
       <form action="" method="post">
         <div class="input-group mb-3">
-          <input type="text" class="form-control" placeholder="Full Name" name="txt_username" required>
+          <input type="text" class="form-control" placeholder="Name" name="txt_name" required>
+          <div class="input-group-append">
+            <div class="input-group-text"><span class="fas fa-user"></span></div>
+          </div>
+        </div>
+
+        <form action="" method="post">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="Contact Number" name="txt_contactnumber" required>
+          <div class="input-group-append">
+            <div class="input-group-text"><span class="fas fa-phone"></span></div>
+          </div>
+        </div>
+
+        <form action="" method="post">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="Address" name="txt_Address" required>
+          <div class="input-group-append">
+            <div class="input-group-text"><span class="fas fa-address-book"></span></div>
+          </div>
+        </div>
+
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="Username" name="txt_username" required>
           <div class="input-group-append">
             <div class="input-group-text"><span class="fas fa-user"></span></div>
           </div>
@@ -88,19 +120,15 @@ if (isset($_POST['btn_register'])) {
         </div>
 
         <div class="input-group mb-3">
-          <select class="form-control" name="txt_role" required>
-            <option value="">Select Role</option>
-            <option value="Admin">Admin</option>
-            <option value="User">User</option>
-          </select>
+          <input type="password" class="form-control" placeholder="Confirm Password" name="txt_confirm_password" required>
           <div class="input-group-append">
-            <div class="input-group-text"><span class="fas fa-users"></span></div>
+            <div class="input-group-text"><span class="fas fa-lock"></span></div>
           </div>
         </div>
 
         <div class="row">
           <div class="col-8">
-            <a href="index.php" class="text-center">Already have an account?</a>
+            <a href="../index.php" class="text-center">Already have an account?</a>
           </div>
           <div class="col-4">
             <button type="submit" class="btn btn-primary btn-block" name="btn_register">Sign Up</button>
@@ -112,14 +140,14 @@ if (isset($_POST['btn_register'])) {
 </div>
 
 <!-- Scripts -->
-<script src="plugins/jquery/jquery.min.js"></script>
-<script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="plugins/sweetalert2/sweetalert2.min.js"></script>
-<script src="plugins/toastr/toastr.min.js"></script>
-<script src="dist/js/adminlte.min.js"></script>
+<script src="../plugins/jquery/jquery.min.js"></script>
+<script src="../plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../plugins/sweetalert2/sweetalert2.min.js"></script>
+<script src="../plugins/toastr/toastr.min.js"></script>
+<script src="../dist/js/adminlte.min.js"></script>
 
 <?php
-// SweetAlert feedback
+// ✅ SweetAlert feedback
 if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
     ?>
     <script>
