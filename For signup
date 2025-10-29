@@ -15,7 +15,7 @@ if (isset($_POST['btn_register'])) {
         $_SESSION['status_code'] = "error";
     } else {
         // ✅ Check if email already exists
-        $check = $pdo->prepare("SELECT * FROM tbl_user WHERE usermail = :usermail");
+        $check = $pdo->prepare("SELECT * FROM tbl_user2 WHERE usermail = :usermail");
         $check->execute([':usermail' => $usermail]);
         $existing = $check->fetch(PDO::FETCH_ASSOC);
 
@@ -23,10 +23,10 @@ if (isset($_POST['btn_register'])) {
             $_SESSION['status'] = "Email already registered!";
             $_SESSION['status_code'] = "error";
         } else {
-            // ✅ Hash password before saving
+            //  Hash password before saving
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            // ✅ Insert new user
+            //  Insert new user
             $insert = $pdo->prepare("INSERT INTO tbl_user (name, username, usermail, userpassword)
                                      VALUES (:name, :username, :usermail, :password)");
             $insert->execute([
@@ -35,11 +35,12 @@ if (isset($_POST['btn_register'])) {
                 ':usermail'  => $usermail,
                 ':password'  => $hashed_password
             ]);
-
-            $_SESSION['status'] = "Registration successful!";
-            $_SESSION['status_code'] = "success";
-            header("Location: index.php"); // redirect to login page
-            exit;
+                
+                $_SESSION['status'] = "Registration successful!";
+                $_SESSION['status_code'] = "success";
+                header("Location: ../index.php"); // redirect to login page
+                exit;
+            
         }
     }
 }
@@ -69,7 +70,7 @@ if (isset($_POST['btn_register'])) {
 <div class="register-box">
   <div class="card card-outline card-primary">
     <div class="card-header text-center">
-      <a href="#" class="h1"><b>POS</b>_Lloyd</a>
+      <a href="#" class="h1"><b>Sign</b>_Up</a>
     </div>
     <div class="card-body">
       <p class="login-box-msg">Register a new account</p>
@@ -152,4 +153,3 @@ if (isset($_SESSION['status']) && $_SESSION['status'] != '') {
 ?>
 </body>
 </html>
-
